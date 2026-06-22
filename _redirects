@@ -1,6 +1,2 @@
-# Proxy chatbot to Netlify Function
-/api/groq  /.netlify/functions/groq  200
-# Proxy lead forms to Netlify Function
-/api/lead  /.netlify/functions/lead  200
-# Proxy API calls to Railway backend
-/api/*  https://opoai-backend.up.railway.app/api/:splat  200
+# Las rutas /api/groq y /api/lead las sirven las Pages Functions
+# (functions/api/groq.js y functions/api/lead.js)
