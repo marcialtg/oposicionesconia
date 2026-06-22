@@ -1157,7 +1157,7 @@
     <button class="x" onclick="toggleChat()">✕</button>
   </div>
   <div class="chat-w-msgs" id="wMsgs">
-    <div class="m bot"><div class="b">¡Hola! Soy Elena. Pregúntame lo que necesites sobre tu oposición.<br><br><span style="font-size:.75rem;color:var(--text-muted);">💡 Para activar la IA real, abre la consola (F12) y escribe: <code style="background:#f0f0f0;padding:1px 4px;border-radius:3px;">localStorage.setItem('groq_api_key','tu-key-de-groq')</code></span></div></div>
+    <div class="m bot"><div class="b">¡Hola! Soy Elena. Pregúntame lo que necesites sobre tu oposición.</div></div>
   </div>
   <div style="padding:2px 12px 6px;display:flex;flex-wrap:wrap;gap:4px;">
     <button onclick="sendW('¿Qué temario necesito?')" style="background:rgba(82,11,17,.05);border:1px solid rgba(82,11,17,.1);color:var(--burgundy);padding:4px 10px;border-radius:12px;font-size:.7rem;cursor:pointer;">Temario</button>
@@ -1183,27 +1183,20 @@
 </footer>
 
 <script>
-  const GROQ_KEY = localStorage.getItem('groq_api_key') || '';
   const MODEL = 'llama-3.3-70b-versatile';
-  const SYS = `Eres Elena, una asistente experta en oposiciones españolas de secundaria y FP. 
-Responde SIEMPRE en español. Sé concreta, precisa y motivadora. 
-Cita artículos de ley cuando corresponda (LOMLOE, RD, Constitución). 
-Si no sabes algo, dilo directamente. No inventes.
-Ayudas con: temario, legislación, supuestos prácticos, programación didáctica, baremo de méritos, planes de estudio.`;
 
   async function queryGroq(msgs) {
     const lastMsg = msgs[msgs.length-1]?.content || '';
-    if (!GROQ_KEY) return fallback(lastMsg);
     try {
-      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      const r = await fetch('/api/groq', {
         method:'POST',
-        headers:{'Authorization':`Bearer ${GROQ_KEY}`,'Content-Type':'application/json'},
-        body:JSON.stringify({model:MODEL,messages:[{role:'system',content:SYS},...msgs],temperature:0.7,max_tokens:1024}),
-        signal:AbortSignal.timeout(10000)
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({messages:msgs}),
+        signal:AbortSignal.timeout(15000)
       });
       if (!r.ok) return fallback(lastMsg);
       const data = await r.json();
-      return data.choices[0].message.content || fallback(lastMsg);
+      return data.content || fallback(lastMsg);
     } catch(e) { return fallback(lastMsg); }
   }
 
@@ -1226,7 +1219,7 @@ Ayudas con: temario, legislación, supuestos prácticos, programación didáctic
     chats.push({session:chatSessionId,role,content,date:new Date().toISOString()});
     localStorage.setItem('opochats',JSON.stringify(chats));
     const body={session:chatSessionId,role,content,date:new Date().toISOString()};
-    fetch('https://script.google.com/macros/s/AKfycbzvvrU-DFyycm9Rf2C8PeBa8TGJCRBZmOEq94a4RiQhRkiVXUREv--CKY4fD_P3kqDf/exec',{
+    fetch('https://script.google.com/macros/s/AKfycbzfvJTDOyr7zvfcAJKXIVYvZpxezoKYka9z5l2UgPbdMRcjtyh2Ny_Hc_i61tRPDU5Z/exec',{
       method:'POST',mode:'no-cors',body:JSON.stringify(body)
     }).catch(()=>{});
   }
@@ -1301,7 +1294,7 @@ Ayudas con: temario, legislación, supuestos prácticos, programación didáctic
     data.source = 'blog_leadmagnet';
     const btn = form.querySelector('.btn');
     btn.textContent = 'Enviando...'; btn.disabled = true;
-    fetch('https://script.google.com/macros/s/AKfycbxT13zndn_1Erb8fTPZujkXjJPA3vRjwVVR_NUSI1k6fLm7CwOR6yegbJYhKGASaOEM6w/exec', {
+    fetch('https://script.google.com/macros/s/AKfycbw9FKlZ9enNfcVCKC0SO0nI7AuqY2AJ_KoqkLQJEc23hSROhEQJi1uYxOfMi3DR6c2OsA/exec', {
       method: 'POST', mode: 'no-cors',
       body: JSON.stringify(data)
     }).then(() => {
@@ -1386,7 +1379,7 @@ Ayudas con: temario, legislación, supuestos prácticos, programación didáctic
     btn.textContent = 'Enviando...'; btn.disabled = true;
     // Send lead to backend (email to marcialtg@gmail.com)
     try {
-      await fetch('https://script.google.com/macros/s/AKfycbxT13zndn_1Erb8fTPZujkXjJPA3vRjwVVR_NUSI1k6fLm7CwOR6yegbJYhKGASaOEM6w/exec', {
+      await fetch('https://script.google.com/macros/s/AKfycbw9FKlZ9enNfcVCKC0SO0nI7AuqY2AJ_KoqkLQJEc23hSROhEQJi1uYxOfMi3DR6c2OsA/exec', {
         method:'POST', mode:'no-cors', body:JSON.stringify(data)
       });
     } catch(e) {}
@@ -1412,7 +1405,6 @@ Ayudas con: temario, legislación, supuestos prácticos, programación didáctic
     const score = answers.reduce((t,v) => t + v, 0);
     const maxScore = testQuestions.length * 3;
     const pct = Math.round((score / maxScore) * 100);
-    const gk = GROQ_KEY;
     const userName = userData?.name || 'opositor';
 
     const answerSummary = testQuestions.map((q, i) => {
@@ -1438,28 +1430,31 @@ Termina con una frase motivadora personalizada.`;
 Respuestas del test:\n${answerSummary}\n\nPuntuación: ${score}/${maxScore} (${pct}%). Genera el plan personalizado.`;
 
     let planHtml = '';
-
-    if (gk) {
-      try {
-        const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method:'POST',
-          headers:{'Authorization':`Bearer ${gk}`,'Content-Type':'application/json'},
-          body:JSON.stringify({
-            model:MODEL,
-            messages:[{role:'system',content:sysPrompt},{role:'user',content:userPrompt}],
-            temperature:0.7,
-            max_tokens:800
-          })
-        });
-        if (!r.ok) throw new Error('API error');
-        const data = await r.json();
-        planHtml = data.choices[0].message.content;
-      } catch(e) {
-        planHtml = getFallbackPlan(pct, score, userName);
-      }
-    } else {
+    try {
+      const r = await fetch('/api/groq', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          messages:[{role:'user',content:userPrompt}],
+          system:sysPrompt,
+          model:MODEL,
+          max_tokens:800
+        })
+      });
+      if (!r.ok) throw new Error('API error');
+      const data = await r.json();
+      planHtml = data.content;
+    } catch(e) {
       planHtml = getFallbackPlan(pct, score, userName);
     }
+
+    // Send diagnostic plan by email
+    try {
+      const emailData = { ...userData, resource: 'test-diagnostico', planContent: planHtml };
+      fetch('https://script.google.com/macros/s/AKfycbw9FKlZ9enNfcVCKC0SO0nI7AuqY2AJ_KoqkLQJEc23hSROhEQJi1uYxOfMi3DR6c2OsA/exec', {
+        method: 'POST', mode: 'no-cors', body: JSON.stringify(emailData)
+      });
+    } catch(e) {}
 
     c.innerHTML = `<div class="test-result" style="text-align:left;padding:10px 0;">
       ${planHtml}
@@ -1502,7 +1497,7 @@ Respuestas del test:\n${answerSummary}\n\nPuntuación: ${score}/${maxScore} (${p
     const fd=new FormData(e.target),data=Object.fromEntries(fd.entries());
     const btn=e.target.querySelector('.btn'),orig=btn.textContent;
     btn.textContent='Enviando...';btn.disabled=true;
-    fetch('https://script.google.com/macros/s/AKfycbxT13zndn_1Erb8fTPZujkXjJPA3vRjwVVR_NUSI1k6fLm7CwOR6yegbJYhKGASaOEM6w/exec',{method:'POST',mode:'no-cors',body:JSON.stringify(data)}).then(()=>{
+    fetch('https://script.google.com/macros/s/AKfycbw9FKlZ9enNfcVCKC0SO0nI7AuqY2AJ_KoqkLQJEc23hSROhEQJi1uYxOfMi3DR6c2OsA/exec',{method:'POST',mode:'no-cors',body:JSON.stringify(data)}).then(()=>{
       document.getElementById('leadForm').style.display='none';document.getElementById('formSuccess').style.display='block'
     }).catch(()=>{document.getElementById('leadForm').style.display='none';document.getElementById('formSuccess').style.display='block'});
     const leads=JSON.parse(localStorage.getItem('opoleads')||'[]');
@@ -1588,7 +1583,7 @@ Respuestas del test:\n${answerSummary}\n\nPuntuación: ${score}/${maxScore} (${p
     data.resource = 'recurso_' + type;
     data.source = 'recurso_modal';
     // Send to backend in background
-    fetch('https://script.google.com/macros/s/AKfycbxT13zndn_1Erb8fTPZujkXjJPA3vRjwVVR_NUSI1k6fLm7CwOR6yegbJYhKGASaOEM6w/exec', {
+    fetch('https://script.google.com/macros/s/AKfycbw9FKlZ9enNfcVCKC0SO0nI7AuqY2AJ_KoqkLQJEc23hSROhEQJi1uYxOfMi3DR6c2OsA/exec', {
       method: 'POST', mode: 'no-cors',
       body: JSON.stringify(data)
     }).catch(() => {});

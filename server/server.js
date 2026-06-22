@@ -10,12 +10,52 @@ const PORT = process.env.PORT || 3001;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const TO_EMAIL = process.env.TO_EMAIL || 'marcialtg@gmail.com';
 const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 app.use(cors());
 app.use(express.json());
 
 // ─── Health check para Railway ───
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+
+// ─── POST /api/groq — proxy para el chatbot ───
+app.post('/api/groq', async (req, res) => {
+  try {
+    const { messages, model, system, max_tokens, temperature } = req.body;
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'messages es requerido' });
+    }
+    const groqMessages = [];
+    if (system) {
+      groqMessages.push({ role: 'system', content: system });
+    }
+    groqMessages.push(...messages.map(m => ({ role: m.role, content: m.content })));
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + GROQ_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: model || GROQ_MODEL,
+        messages: groqMessages,
+        temperature: temperature || 0.7,
+        max_tokens: max_tokens || 1024
+      })
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      return res.status(response.status).json({ error: 'Groq API error: ' + err });
+    }
+    const data = await response.json();
+    res.json({ content: data.choices[0].message.content });
+  } catch (err) {
+    console.error('× Error en /api/groq:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
 
 // ─── Base de datos SQLite ───
 const db = new Database(path.join(__dirname, 'leads.db'));
