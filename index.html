@@ -1294,8 +1294,9 @@
     data.source = 'blog_leadmagnet';
     const btn = form.querySelector('.btn');
     btn.textContent = 'Enviando...'; btn.disabled = true;
-    fetch('https://script.google.com/macros/s/AKfycbw9FKlZ9enNfcVCKC0SO0nI7AuqY2AJ_KoqkLQJEc23hSROhEQJi1uYxOfMi3DR6c2OsA/exec', {
-      method: 'POST', mode: 'no-cors',
+    fetch('/api/lead', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
       body: JSON.stringify(data)
     }).then(() => {
       showSuccess(form, successId);
@@ -1379,8 +1380,10 @@
     btn.textContent = 'Enviando...'; btn.disabled = true;
     // Send lead to backend (email to marcialtg@gmail.com)
     try {
-      await fetch('https://script.google.com/macros/s/AKfycbw9FKlZ9enNfcVCKC0SO0nI7AuqY2AJ_KoqkLQJEc23hSROhEQJi1uYxOfMi3DR6c2OsA/exec', {
-        method:'POST', mode:'no-cors', body:JSON.stringify(data)
+      await fetch('/api/lead', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(data)
       });
     } catch(e) {}
     const leads = JSON.parse(localStorage.getItem('opoleads') || '[]');
@@ -1451,8 +1454,10 @@ Respuestas del test:\n${answerSummary}\n\nPuntuación: ${score}/${maxScore} (${p
     // Send diagnostic plan by email
     try {
       const emailData = { ...userData, resource: 'test-diagnostico', planContent: planHtml };
-      fetch('https://script.google.com/macros/s/AKfycbw9FKlZ9enNfcVCKC0SO0nI7AuqY2AJ_KoqkLQJEc23hSROhEQJi1uYxOfMi3DR6c2OsA/exec', {
-        method: 'POST', mode: 'no-cors', body: JSON.stringify(emailData)
+      fetch('/api/lead', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(emailData)
       });
     } catch(e) {}
 
@@ -1497,7 +1502,7 @@ Respuestas del test:\n${answerSummary}\n\nPuntuación: ${score}/${maxScore} (${p
     const fd=new FormData(e.target),data=Object.fromEntries(fd.entries());
     const btn=e.target.querySelector('.btn'),orig=btn.textContent;
     btn.textContent='Enviando...';btn.disabled=true;
-    fetch('https://script.google.com/macros/s/AKfycbw9FKlZ9enNfcVCKC0SO0nI7AuqY2AJ_KoqkLQJEc23hSROhEQJi1uYxOfMi3DR6c2OsA/exec',{method:'POST',mode:'no-cors',body:JSON.stringify(data)}).then(()=>{
+    fetch('/api/lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(()=>{
       document.getElementById('leadForm').style.display='none';document.getElementById('formSuccess').style.display='block'
     }).catch(()=>{document.getElementById('leadForm').style.display='none';document.getElementById('formSuccess').style.display='block'});
     const leads=JSON.parse(localStorage.getItem('opoleads')||'[]');
@@ -1583,8 +1588,9 @@ Respuestas del test:\n${answerSummary}\n\nPuntuación: ${score}/${maxScore} (${p
     data.resource = 'recurso_' + type;
     data.source = 'recurso_modal';
     // Send to backend in background
-    fetch('https://script.google.com/macros/s/AKfycbw9FKlZ9enNfcVCKC0SO0nI7AuqY2AJ_KoqkLQJEc23hSROhEQJi1uYxOfMi3DR6c2OsA/exec', {
-      method: 'POST', mode: 'no-cors',
+    fetch('/api/lead', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
       body: JSON.stringify(data)
     }).catch(() => {});
     const leads = JSON.parse(localStorage.getItem('opoleads') || '[]');
