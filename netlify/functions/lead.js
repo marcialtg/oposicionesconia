@@ -78,7 +78,7 @@ exports.handler = async (event) => {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: 'OposicionesConIA <onboarding@resend.dev>',
+from: 'OposicionesConIA <envio@oposicionesconia.com>',
           to: email,
           subject: subj + ' - OposicionesConIA',
           html: EMAIL_WRAPPER(content)

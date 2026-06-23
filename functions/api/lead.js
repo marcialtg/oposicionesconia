@@ -44,7 +44,7 @@ export async function onRequest(context) {
       const resp = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: 'OposicionesConIA <onboarding@resend.dev>', to, subject: subj, html })
+        body: JSON.stringify({ from: 'OposicionesConIA <envio@oposicionesconia.com>', to, subject: subj, html })
       });
       if (!resp.ok) {
         const err = await resp.text();

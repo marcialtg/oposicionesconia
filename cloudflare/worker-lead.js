@@ -43,7 +43,7 @@ export default {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: 'OposicionesConIA <onboarding@resend.dev>',
+from: 'OposicionesConIA <envio@oposicionesconia.com>',
           to: 'marcialtg@gmail.com',
           subject: `📥 ${name} solicitó: ${r || 'recursos'}`,
           html: `<h2>Nuevo registro</h2><p><b>Nombre:</b> ${name}</p><p><b>Email:</b> ${email}</p><p><b>Teléfono:</b> ${phone}</p><p><b>Oposición:</b> ${oposicion}</p><p><b>CCAA:</b> ${ccaa}</p>`
