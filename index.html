@@ -1185,13 +1185,15 @@
 <script>
   const MODEL = 'qwen/qwen3-32b';
 
+  const SYS = 'Eres Elena, asesora experta en oposiciones de secundaria y FP en España. Responde SIEMPRE en español, con un tono cercano y motivador. Da información concreta y útil sobre temarios, programación, legislación, baremo y preparación de oposiciones. Si no sabes algo, sugiere preguntar de otra forma.';
+
   async function queryGroq(msgs) {
     const lastMsg = msgs[msgs.length-1]?.content || '';
     try {
       const r = await fetch('/api/groq', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({messages:msgs}),
+        body:JSON.stringify({messages:msgs, system:SYS}),
         signal:AbortSignal.timeout(15000)
       });
       if (!r.ok) return fallback(lastMsg);
