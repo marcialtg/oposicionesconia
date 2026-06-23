@@ -1,5 +1,5 @@
-// Cloudflare Pages Function: Gemini 2.0 Flash + Google Search
-// Añade GEMINI_API_KEY en Variables de Entorno
+// Cloudflare Pages Function: Groq Proxy
+// Añade GROQ_API_KEY en Variables de Entorno
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -13,54 +13,41 @@ export async function onRequest(context) {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  const KEY = env.GEMINI_API_KEY;
-  if (!KEY) {
-    return new Response(JSON.stringify({ error: 'GEMINI_API_KEY no configurada' }), {
+  const GROQ_KEY = env.GROQ_API_KEY;
+  if (!GROQ_KEY) {
+    return new Response(JSON.stringify({ error: 'GROQ_API_KEY no configurada' }), {
       status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
   }
 
   try {
-    const { messages, system, temperature, max_tokens } = await request.json();
+    const { messages, system, max_tokens, temperature } = await request.json();
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: 'messages es requerido' }), {
         status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
     }
+    const groqMessages = [];
+    if (system) groqMessages.push({ role: 'system', content: system });
+    groqMessages.push(...messages);
 
-    const contents = messages.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }));
-
-    const body = {
-      contents,
-      tools: [{ googleSearch: {} }],
-      generationConfig: {
-        temperature: temperature ?? 0.7,
-        maxOutputTokens: max_tokens || 1024
-      }
-    };
-    if (system) {
-      body.systemInstruction = { parts: [{ text: system }] };
-    }
-
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${KEY}`, {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: groqMessages,
+        temperature: temperature ?? 0.7,
+        max_tokens: max_tokens || 1024
+      })
     });
-
     if (!resp.ok) {
-      const err = await resp.text();
-      return new Response(JSON.stringify({ error: 'Gemini API error' }), {
+      return new Response(JSON.stringify({ error: 'Groq API error' }), {
         status: resp.status, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
     }
-
     const data = await resp.json();
-    const text = data?.candidates?.[0]?.content?.parts?.filter(p => p.text).map(p => p.text).join('\n') || '';
-    return new Response(JSON.stringify({ content: text }), {
+    return new Response(JSON.stringify({ content: data.choices[0].message.content }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
   } catch (e) {
