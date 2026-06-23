@@ -11,7 +11,7 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const TO_EMAIL = process.env.TO_EMAIL || 'marcialtg@gmail.com';
 const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const GROQ_MODEL = 'qwen/qwen3-32b';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 app.use(cors());
 app.use(express.json());

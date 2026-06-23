@@ -1,5 +1,5 @@
 const GROQ_KEY = process.env.GROQ_API_KEY;
-const GROQ_MODEL = 'qwen/qwen3-32b';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 exports.handler = async (event) => {
   const headers = {
