@@ -40,12 +40,18 @@ export async function onRequest(context) {
     const { name = 'opositor', email, phone = '', oposicion = '', ccaa = '' } = data;
 
     // Notify owner
-    const send = (to, subj, html) =>
-      fetch('https://api.resend.com/emails', {
+    const send = async (to, subj, html) => {
+      const resp = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ from: 'OposicionesConIA <onboarding@resend.dev>', to, subject: subj, html })
       });
+      if (!resp.ok) {
+        const err = await resp.text();
+        console.error(`Resend error (${resp.status}) to ${to}: ${err}`);
+      }
+      return resp;
+    };
 
     await send('marcialtg@gmail.com', `📥 ${name} solicitó: ${r || 'recursos'}`,
       `<h2>Nuevo registro</h2><p><b>Nombre:</b> ${name}</p><p><b>Email:</b> ${email}</p><p><b>Teléfono:</b> ${phone}</p><p><b>Oposición:</b> ${oposicion}</p><p><b>CCAA:</b> ${ccaa}</p>`
