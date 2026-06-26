@@ -41,7 +41,7 @@ export async function onRequest(context) {
 
     const sysPrompt = system || 'Eres Elena, experta en oposiciones españolas de secundaria y FP. Responde en español.';
     const ragPrompt = contextStr
-      ? `${sysPrompt}\n\nInformación relevante para responder:\n${contextStr}\n\nResponde basándote en la información anterior. Si no tienes información suficiente, dilo claramente.`
+      ? `${sysPrompt}\n\nInformación relevante extraída de la base de conocimiento:\n${contextStr}\n\nIMPORTANTE: Usa SOLO la información anterior para responder. Si no encuentras la respuesta ahí, di que no tienes esa información. No uses tu conocimiento previo. Responde en español de forma clara y concisa.`
       : sysPrompt;
 
     const aiMessages = [{ role: 'system', content: ragPrompt }];

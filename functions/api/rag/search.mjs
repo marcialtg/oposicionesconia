@@ -27,5 +27,5 @@ export async function search(query, token) {
 
   const scored = KB.map(c => ({ ...c, score: cosine(qv, c.embedding) }));
   scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, 5).filter(c => c.score > 0.3);
+  return scored.slice(0, 5).filter(c => c.score > 0.1);
 }
