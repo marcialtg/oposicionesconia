@@ -1,5 +1,7 @@
-// Cloudflare Pages Function: Workers AI via REST API
+// Cloudflare Pages Function: Workers AI con RAG
 // Necesita CF_ACCOUNT_ID y CF_API_TOKEN en Variables de Entorno
+
+import { search } from '../rag/search.mjs';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -13,10 +15,9 @@ export async function onRequest(context) {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  const ACCOUNT = env.CF_ACCOUNT_ID;
   const TOKEN = env.CF_API_TOKEN;
-  if (!ACCOUNT || !TOKEN) {
-    return new Response(JSON.stringify({ error: 'CF_ACCOUNT_ID y CF_API_TOKEN no configurados' }), {
+  if (!TOKEN) {
+    return new Response(JSON.stringify({ error: 'CF_API_TOKEN no configurado' }), {
       status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
   }
@@ -28,12 +29,26 @@ export async function onRequest(context) {
         status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
     }
-    const aiMessages = [];
-    if (system) aiMessages.push({ role: 'system', content: system });
+
+    // RAG: buscar contexto relevante
+    const lastMsg = messages[messages.length - 1]?.content || '';
+    const contextos = await search(lastMsg, TOKEN);
+
+    let contextStr = '';
+    if (contextos.length > 0) {
+      contextStr = contextos.map((c, i) => `[Fuente ${i + 1}] ${c.content}`).join('\n');
+    }
+
+    const sysPrompt = system || 'Eres Elena, experta en oposiciones españolas de secundaria y FP. Responde en español.';
+    const ragPrompt = contextStr
+      ? `${sysPrompt}\n\nInformación relevante para responder:\n${contextStr}\n\nResponde basándote en la información anterior. Si no tienes información suficiente, dilo claramente.`
+      : sysPrompt;
+
+    const aiMessages = [{ role: 'system', content: ragPrompt }];
     aiMessages.push(...messages);
 
     const resp = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/ai/run/@cf/meta/llama-3.2-3b-instruct`,
+      `https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/ai/run/@cf/meta/llama-3.2-3b-instruct`,
       {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
