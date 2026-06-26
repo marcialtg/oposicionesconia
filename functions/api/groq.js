@@ -33,7 +33,7 @@ export async function onRequest(context) {
     aiMessages.push(...messages);
 
     const resp = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/ai/run/@cf/meta/llama-3.2-11b-instruct`,
+      `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/ai/run/@cf/meta/llama-3.2-3b-instruct`,
       {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
