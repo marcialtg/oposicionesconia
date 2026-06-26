@@ -5,3 +5,9 @@ node_modules/
 *.db-shm
 *.db-wal
 server/Open-Laudable
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
