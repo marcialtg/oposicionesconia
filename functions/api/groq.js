@@ -1,7 +1,7 @@
 // Cloudflare Pages Function: Workers AI con RAG
 // Necesita CF_ACCOUNT_ID y CF_API_TOKEN en Variables de Entorno
 
-import { search } from '../rag/search.mjs';
+import { search } from './rag/search.mjs';
 
 export async function onRequest(context) {
   const { request, env } = context;
